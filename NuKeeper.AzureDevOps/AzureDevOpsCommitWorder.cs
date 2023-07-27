@@ -5,6 +5,7 @@ using System.Text;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using NuKeeper.Abstractions.CollaborationPlatform;
+using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.RepositoryInspection;
 
@@ -18,7 +19,7 @@ namespace NuKeeper.AzureDevOps
         // https://visualstudio.uservoice.com/forums/330519-azure-devops-formerly-visual-studio-team-services/suggestions/20217283-raise-the-character-limit-for-pull-request-descrip
         private const int MaxCharacterCount = 4000;
 
-        public string MakePullRequestTitle(IReadOnlyCollection<PackageUpdateSet> updates)
+        public string MakePullRequestTitle(IReadOnlyCollection<PackageUpdateSet> updates, VersionChange version = VersionChange.None, string ticketNumber = null)
         {
             if (updates == null)
             {
@@ -38,7 +39,7 @@ namespace NuKeeper.AzureDevOps
             return $"{CommitEmoji} Automatic update of {updates.SelectedId} to {updates.SelectedVersion}";
         }
 
-        public string MakeCommitMessage(PackageUpdateSet updates)
+        public string MakeCommitMessage(PackageUpdateSet updates, VersionChange version = VersionChange.None, string ticketNumber = null)
         {
             if (updates == null)
             {

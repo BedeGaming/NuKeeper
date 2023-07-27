@@ -16,7 +16,6 @@ namespace NuKeeper.Abstractions.Configuration
 
         public UsePrerelease UsePrerelease { get; set; }
 
-
         public OutputFormat OutputFormat { get; set; }
         public OutputDestination OutputDestination { get; set; }
         public string OutputFileName { get; set; }
@@ -24,5 +23,7 @@ namespace NuKeeper.Abstractions.Configuration
         public string Directory { get; set; }
 
         public string GitPath { get; set; }
+
+        public string TicketNumber { get; set; }
     }
 }

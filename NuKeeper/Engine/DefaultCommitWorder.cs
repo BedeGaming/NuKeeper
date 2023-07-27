@@ -5,6 +5,7 @@ using System.Text;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using NuKeeper.Abstractions.CollaborationPlatform;
+using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.RepositoryInspection;
 
@@ -14,7 +15,7 @@ namespace NuKeeper.Engine
     {
         private const string CommitEmoji = "package";
 
-        public string MakePullRequestTitle(IReadOnlyCollection<PackageUpdateSet> updates)
+        public string MakePullRequestTitle(IReadOnlyCollection<PackageUpdateSet> updates, VersionChange version = VersionChange.None, string ticketNumber = null)
         {
             if (updates == null)
             {
@@ -23,7 +24,7 @@ namespace NuKeeper.Engine
 
             if (updates.Count == 1)
             {
-                return PackageTitle(updates.First());
+                return $"[{version}][{ticketNumber}] {PackageTitle(updates.First())}";
             }
 
             return $"Automatic update of {updates.Count} packages";
@@ -34,14 +35,14 @@ namespace NuKeeper.Engine
             return $"Automatic update of {updates.SelectedId} to {updates.SelectedVersion}";
         }
 
-        public string MakeCommitMessage(PackageUpdateSet updates)
+        public string MakeCommitMessage(PackageUpdateSet updates, VersionChange version = VersionChange.None, string ticketNumber = null)
         {
             if (updates == null)
             {
                 throw new ArgumentNullException(nameof(updates));
             }
 
-            return $":{CommitEmoji}: {PackageTitle(updates)}";
+            return $"[{version}][{ticketNumber}] :{CommitEmoji}: {PackageTitle(updates)}";
         }
 
         public string MakeCommitDetails(IReadOnlyCollection<PackageUpdateSet> updates)

@@ -123,7 +123,7 @@ namespace NuKeeper.Engine.Packages
             var haveUpdates = filteredUpdates.Any();
             foreach (var updateSet in filteredUpdates)
             {
-                var commitMessage = _collaborationFactory.CommitWorder.MakeCommitMessage(updateSet);
+                var commitMessage = _collaborationFactory.CommitWorder.MakeCommitMessage(updateSet, settings.UserSettings.AllowedChange, settings.UserSettings.TicketNumber);
 
                 await _updateRunner.Update(updateSet, sources);
 
@@ -151,10 +151,10 @@ namespace NuKeeper.Engine.Packages
 
                 if (!pullRequestExists)
                 {
-                    var title = _collaborationFactory.CommitWorder.MakePullRequestTitle(updates);
+                    var title = _collaborationFactory.CommitWorder.MakePullRequestTitle(updates, settings.UserSettings.AllowedChange, settings.UserSettings.TicketNumber);
                     var body = _collaborationFactory.CommitWorder.MakeCommitDetails(updates);
 
-                    var pullRequestRequest = new PullRequestRequest(qualifiedBranch, title, repository.DefaultBranch, settings.BranchSettings.DeleteBranchAfterMerge, settings.SourceControlServerSettings.Repository.SetAutoMerge) { Body = body };
+                    var pullRequestRequest = new PullRequestRequest(qualifiedBranch, title, repository.DefaultBranch, settings.BranchSettings.DeleteBranchAfterMerge, false) { Body = body };
 
                     await _collaborationFactory.CollaborationPlatform.OpenPullRequest(repository.Pull, pullRequestRequest, settings.SourceControlServerSettings.Labels);
 

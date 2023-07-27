@@ -22,9 +22,13 @@ namespace NuKeeper.Commands
         private readonly IConfigureLogger _configureLogger;
         protected readonly IFileSettingsCache FileSettingsCache;
 
-        [Option(CommandOptionType.SingleValue, ShortName = "c", LongName = "change",
-            Description = "Allowed version change: Patch, Minor, Major. Defaults to Major.")]
+        [Argument(2, Name = "Version Change",
+            Description = "Version to be associated with the commit. Will be put in brackets as part of the commit message")]
         public VersionChange? AllowedChange { get; set; }
+
+        [Argument(3, Name = "Ticket Number",
+            Description = "Ticket number to associate with the commit. Will be put in brackets as part of the commit message")]
+        public string TicketNumber { get; set; }
 
         [Option(CommandOptionType.SingleValue, ShortName = "", LongName = "useprerelease",
             Description = "Allowed prerelease: Always, Never, FromPrerelease. Defaults to FromPrerelease.")]
@@ -128,7 +132,6 @@ namespace NuKeeper.Commands
         private SettingsContainer MakeSettings()
         {
             var fileSettings = FileSettingsCache.GetSettings();
-            var allowedChange = Concat.FirstValue(AllowedChange, fileSettings.Change, VersionChange.Major);
             var usePrerelease = Concat.FirstValue(UsePrerelease, fileSettings.UsePrerelease, Abstractions.Configuration.UsePrerelease.FromPrerelease);
             var branchNameTemplate = Concat.FirstValue(BranchNameTemplate, fileSettings.BranchNameTemplate);
             var gitpath = Concat.FirstValue(GitCliPath, fileSettings.GitCliPath);
@@ -139,10 +142,9 @@ namespace NuKeeper.Commands
                 PackageFilters = new FilterSettings(),
                 UserSettings = new UserSettings
                 {
-                    AllowedChange = allowedChange,
                     UsePrerelease = usePrerelease,
                     NuGetSources = NuGetSources,
-                    GitPath = gitpath
+                    GitPath = gitpath,
                 },
                 BranchSettings = new BranchSettings
                 {
@@ -155,6 +157,18 @@ namespace NuKeeper.Commands
 
         protected virtual async Task<ValidationResult> PopulateSettings(SettingsContainer settings)
         {
+            var isVersionChangeValid = PopulateVersionChange(settings);
+            if (!isVersionChangeValid.IsSuccess)
+            {
+                return isVersionChangeValid;
+            }
+
+            var isTicketNumberValid = PopulateTicketNumber(settings);
+            if (!isTicketNumberValid.IsSuccess)
+            {
+                return isTicketNumberValid;
+            }
+
             var minPackageAge = ReadMinPackageAge();
             if (!minPackageAge.HasValue)
             {
@@ -209,6 +223,49 @@ namespace NuKeeper.Commands
             var valueWithFallback = Concat.FirstValue(MinimumPackageAge, settingsFromFile.Age, defaultMinPackageAge);
 
             return DurationParser.Parse(valueWithFallback);
+        }
+
+        private ValidationResult PopulateVersionChange(
+            SettingsContainer settings)
+        {
+            var settingsFromFile = FileSettingsCache.GetSettings();
+            var values = new[] { AllowedChange, settingsFromFile.Change };
+            var value = values.FirstOrDefault(i => i.HasValue);
+
+            if (value == null)
+            {
+                return ValidationResult.Failure(
+                   "Version Change must be supplied.");
+            }
+
+            settings.UserSettings.AllowedChange = value.Value;
+            return ValidationResult.Success;
+        }
+
+        private ValidationResult PopulateTicketNumber(
+            SettingsContainer settings)
+        {
+            var settingsFromFile = FileSettingsCache.GetSettings();
+            var value = Concat.FirstValue(TicketNumber, settingsFromFile.TicketNumber);
+
+            if (string.IsNullOrEmpty(value))
+            {
+                return ValidationResult.Failure(
+                    "Ticket Number must be supplied.");
+            }
+
+            var regex = new Regex(@"[A-Z]{2,6}-\d+|no-ticket");
+
+            if (regex.IsMatch(value))
+            {
+                settings.UserSettings.TicketNumber = value;
+                return ValidationResult.Success;
+            }
+            else
+            {
+                return ValidationResult.Failure(
+                   $"Unable to parse value '{value}' for Ticket Number.");
+            }
         }
 
         private ValidationResult PopulatePackageIncludes(

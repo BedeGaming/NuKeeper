@@ -5,6 +5,7 @@ using System.Text;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using NuKeeper.Abstractions.CollaborationPlatform;
+using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.RepositoryInspection;
 
@@ -14,7 +15,7 @@ namespace NuKeeper.BitBucket
     {
         private const string CommitEmoji = "📦";
 
-        public string MakePullRequestTitle(IReadOnlyCollection<PackageUpdateSet> updates)
+        public string MakePullRequestTitle(IReadOnlyCollection<PackageUpdateSet> updates, VersionChange version = VersionChange.None, string ticketNumber = null)
         {
             if (updates == null)
             {
@@ -34,7 +35,7 @@ namespace NuKeeper.BitBucket
             return $"Automatic update of {updates.SelectedId} to {updates.SelectedVersion}";
         }
 
-        public string MakeCommitMessage(PackageUpdateSet updates)
+        public string MakeCommitMessage(PackageUpdateSet updates, VersionChange version = VersionChange.None, string ticketNumber = null)
         {
             if (updates == null)
             {

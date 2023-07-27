@@ -70,6 +70,7 @@ namespace NuKeeper.Engine
                 await GitInit(git, repository);
             }
 
+
             var userSettings = settings.UserSettings;
 
             var sources = _nugetSourcesReader.Read(settings.WorkingFolder ?? git.WorkingFolder, userSettings.NuGetSources);
